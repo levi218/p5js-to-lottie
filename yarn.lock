@@ -431,6 +431,11 @@ find-up@^4.0.0:
     locate-path "^5.0.0"
     path-exists "^4.0.0"
 
+fit-curve@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/fit-curve/-/fit-curve-0.2.0.tgz#d48b7ec8775e915d126762868bb99a338bc82d06"
+  integrity sha512-op7ofeL13getbqL5J5ACeNxTlLWzusn4/jjEjSVA1sS7PfXWumdtNITvLuTjSobis+jZzMil2rsJ3Vhw7OxQyQ==
+
 flat@^5.0.2:
   version "5.0.2"
   resolved "https://registry.yarnpkg.com/flat/-/flat-5.0.2.tgz#8ca6fe332069ffa9d324c327198c598259ceb241"

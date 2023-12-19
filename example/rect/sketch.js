@@ -42,7 +42,7 @@ function draw() {
 }
 
 function startRecord() {
-  window.saveLottie(2, (animation) => {
+  window.saveLottie(5, (animation) => {
     const player = document.querySelector("lottie-player");
     player.load(JSON.stringify(animation));
   });

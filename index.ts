@@ -1,10 +1,8 @@
 import { attachInterceptor, detachInterceptor } from "./src/interceptor";
-import {
-  LottieAnimation,
-  LottieLayer,
-  LottieShapeEllipse,
-  LottieShapeRect,
-} from "./src/lottieClasses";
+import { LottieAnimation } from "./src/lottie-objects/animation";
+import { LottieLayer } from "./src/lottie-objects/layer";
+import { LottieShapeEllipse } from "./src/lottie-objects/shapes/ellipse";
+import { LottieShapeRect } from "./src/lottie-objects/shapes/rect";
 
 async function _saveLottie(
   this: any,

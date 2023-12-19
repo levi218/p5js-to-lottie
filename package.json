@@ -16,5 +16,7 @@
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
   },
-  "dependencies": {}
+  "dependencies": {
+    "fit-curve": "^0.2.0"
+  }
 }
