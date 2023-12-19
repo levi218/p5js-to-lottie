@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+    <!-- For demo -->
+    <!-- <script src="sampleObject.js"></script> -->
+
+    <!-- Actual lib -->
+    <script src="../../dist/bundle.js"></script>
+
+    <!-- For demo -->
+    <!-- <script src="initSample.js"></script> -->
+    <script src="sketch.js"></script>
+  </head>
+  <body>
+    <main></main>
+    <lottie-player
+      background="transparent"
+      speed="1"
+      style="width: 400px; height: 400px"
+      direction="1"
+      mode="normal"
+      loop
+      controls
+      autoplay
+    ></lottie-player>
+    <button onclick="startRecord()">Record</button>
+  </body>
+</html>
