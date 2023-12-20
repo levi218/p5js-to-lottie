@@ -18,9 +18,7 @@ function setup() {
 }
 
 function draw() {
-  // draw a slowly fading background to make a trail effect
-  background(30, 240, 220);
-  translate(1, 0);
+  clear();
 
   // draw the circle on the screen
   fill(245, 10, 20);
@@ -66,6 +64,7 @@ function draw() {
 // });
 
 function startRecord() {
+  initVar();
   window.saveLottie(5, (animation) => {
     const player = document.querySelector("lottie-player");
     player.load(JSON.stringify(animation));

@@ -22,6 +22,7 @@ export function attachInterceptor(p5Instance: any) {
   originalFunctions["_renderEllipse"] = p5Instance._renderEllipse;
   p5Instance._renderEllipse = function () {
     markInitFrame(this);
+
     // tracking for ellipse
     if (!objects[`ellipse${objectCounter}`])
       objects[`ellipse${objectCounter}`] = {
@@ -42,6 +43,7 @@ export function attachInterceptor(p5Instance: any) {
   originalFunctions["_renderRect"] = p5Instance._renderRect;
   p5Instance._renderRect = function () {
     markInitFrame(this);
+
     // tracking for rect
     if (!objects[`rect${objectCounter}`])
       objects[`rect${objectCounter}`] = {

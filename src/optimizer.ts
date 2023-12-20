@@ -26,6 +26,7 @@ type TimeFrame =
         t: number;
         x: number[];
       };
+      isHold?: boolean;
     };
 export interface OptimizerOptions {
   roundDegree?: number;
@@ -47,7 +48,12 @@ export class Optimizer {
   }
   segregate(input: number[][]) {
     const segments: { points: number[][]; startTime?: number }[] = [];
-    let lastSegEnd = 0;
+    let lastSegEnd = 2;
+    // dont know exact the reason, but after comparing the results, saveGif seems to have first frame doubled
+    // first frame stored separately for further transformation in "process" function
+    segments.push({
+      points: input.slice(0, 1),
+    });
     // manually split input into segments
     // the fit-curve lib is for aligning the points to a continuous curve
     // so too many sharp turns will decrease the result quality
@@ -67,7 +73,7 @@ export class Optimizer {
       ) {
         // extremum
         segments.push({
-          points: input.slice(lastSegEnd, frameIndex + 1),
+          points: input.slice(lastSegEnd, frameIndex),
         });
         lastSegEnd = frameIndex;
       }
@@ -139,6 +145,20 @@ export class Optimizer {
     for (const segment of segments) {
       segment.startTime = baseTime;
 
+      // dont know exact the reason, but after comparing the results, saveGif seems to have first frame doubled
+      // so we need to "hold" the first frame to match the exact behavior of saveGif
+      if (baseTime === 0) {
+        timeFrames.push({
+          type: "point" as const,
+          startPoint: {
+            t: 0,
+            x: segment.points[0],
+          },
+          isHold: true,
+        });
+        baseTime += 1;
+        continue;
+      }
       const curves = this.reformAxis(segment.points).map((e) => {
         return this.optimizeSegment(e, baseTime);
       });
@@ -169,6 +189,7 @@ export class Optimizer {
       }
       // not optimizable -> each as a timeframe
       segment.points.forEach((pointSet, i) => {
+        if (i === segment.points.length - 1) return;
         timeFrames.push({
           type: "point" as const,
           startPoint: {
@@ -177,7 +198,8 @@ export class Optimizer {
           },
         });
       });
-      baseTime += segment.points.length;
+
+      baseTime += segment.points.length - 1;
     }
     return this.toAnimation(timeFrames);
   }
@@ -205,15 +227,21 @@ export class Optimizer {
         arr.push({
           t: that.round(frame.startPoint.t),
           s: frame.startPoint.x.map((e) => that.round(e)), // start position value
-          h: 0,
-          o: {
-            x: [0, 0],
-            y: [0, 0],
-          },
-          i: {
-            x: [1, 1],
-            y: [1, 1],
-          },
+          ...(frame.isHold
+            ? {
+                h: 1,
+              }
+            : {
+                h: 0,
+                o: {
+                  x: [0, 0],
+                  y: [0, 0],
+                },
+                i: {
+                  x: [1, 1],
+                  y: [1, 1],
+                },
+              }),
         });
       }
       if (index === timeFrames.length - 1 && frame.type === "curve") {

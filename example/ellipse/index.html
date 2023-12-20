@@ -1,7 +1,7 @@
 <html>
   <head>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script>
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <script src="../../libs/lottie-player.js"></script>
 
     <!-- For demo -->
     <!-- <script src="sampleObject.js"></script> -->
@@ -18,12 +18,15 @@
     <lottie-player
       background="transparent"
       speed="1"
-      style="width: 400px; height: 400px"
+      style="width: 400px; height: 435px"
       direction="1"
       mode="normal"
-      loop
-      controls
-      autoplay
+      renderer="canvas"
+      background="#FFF"
+      preserveAspectRatio="xMinYMin meet"
+      loop="0"
+      controls="0"
+      autoplay="0"
     ></lottie-player>
     <button onclick="startRecord()">Record</button>
   </body>
