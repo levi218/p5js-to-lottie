@@ -119,7 +119,7 @@ The first checkpoint is to support frequently used 2D primitives, 2D transformat
 - [ ] translate()
 
 ### Color settings
-- [ ] background()
+- [X] background()
 - [ ] fill()
 - [ ] noFill()
 - [ ] noStroke()
