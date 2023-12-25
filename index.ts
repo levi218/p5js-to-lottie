@@ -1,6 +1,7 @@
 import { attachInterceptor, detachInterceptor } from "./src/interceptor";
 import { LottieAnimation } from "./src/lottie-objects/animation";
 import { LottieLayer } from "./src/lottie-objects/layer";
+import { LottieShape } from "./src/lottie-objects/shape";
 import { LottieShapeBackground } from "./src/lottie-objects/shapes/background";
 import { LottieShapeEllipse } from "./src/lottie-objects/shapes/ellipse";
 import { LottieShapeRect } from "./src/lottie-objects/shapes/rect";
@@ -104,46 +105,22 @@ async function _saveLottie(
 
   const animation = new LottieAnimation({ frameRate: 60, totalFrame: nFrames });
 
+  const lottieClassTypeMap: Record<string, typeof LottieShape> = {
+    ellipse: LottieShapeEllipse,
+    rect: LottieShapeRect,
+    background: LottieShapeBackground,
+  };
   // TODO: wait 2 secs then use the sample object from
   for (const [key, value] of Object.entries(recordedData)) {
     console.log(value);
-    switch (value.type) {
-      case "ellipse":
-        {
-          const layer = new LottieLayer({});
-          animation.addLayer(layer);
-          const shape = new LottieShapeEllipse({
-            name: key,
-            args: value.frames,
-          });
-          layer.addShape(shape);
-        }
-        break;
-      case "rect":
-        {
-          const layer = new LottieLayer({});
-          animation.addLayer(layer);
-          const shape = new LottieShapeRect({
-            name: key,
-            args: value.frames,
-          });
-          layer.addShape(shape);
-        }
-        break;
-      case "background":
-        {
-          const layer = new LottieLayer({});
-          animation.addLayer(layer);
-          const shape = new LottieShapeBackground({
-            name: key,
-            args: value.frames,
-          });
-          layer.addShape(shape);
-        }
-        break;
-      default:
-        break;
-    }
+    const ShapeClass = lottieClassTypeMap[value.type];
+    const layer = new LottieLayer({});
+    animation.addLayer(layer);
+    const shape = new ShapeClass({
+      name: key,
+      args: value.frames,
+    });
+    layer.addShape(shape);
   }
 
   console.log(animation.toJson());

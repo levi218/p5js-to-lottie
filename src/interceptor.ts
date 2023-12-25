@@ -52,71 +52,9 @@ export function attachInterceptor(p5Instance: any) {
       objectCounter++;
 
       // Now, call the original method
-      return originalFunctions["ellipse"].apply(this, arguments);
+      return originalFunctions[key].apply(this, arguments);
     };
   }
-
-  // originalFunctions["ellipse"] = context.ellipse;
-  // context.ellipse = function () {
-  //   markInitFrame(context);
-
-  //   // tracking for ellipse
-  //   if (!objects[`ellipse${objectCounter}`])
-  //     objects[`ellipse${objectCounter}`] = {
-  //       type: "ellipse",
-  //       frames: [],
-  //     };
-  //   objects[`ellipse${objectCounter}`].frames.push({
-  //     frame: lottieFrameCount,
-  //     params: arguments,
-  //     fill: context.drawingContext.fillStyle,
-  //   });
-  //   objectCounter++;
-
-  //   // Now, call the original method
-  //   return originalFunctions["ellipse"].apply(this, arguments);
-  // };
-
-  // originalFunctions["rect"] = context.rect;
-  // context.rect = function () {
-  //   markInitFrame(context);
-
-  //   // tracking for rect
-  //   if (!objects[`rect${objectCounter}`])
-  //     objects[`rect${objectCounter}`] = {
-  //       type: "rect",
-  //       frames: [],
-  //     };
-  //   objects[`rect${objectCounter}`].frames.push({
-  //     frame: lottieFrameCount,
-  //     params: arguments,
-  //     fill: context.drawingContext.fillStyle,
-  //   });
-  //   objectCounter++;
-
-  //   // Now, call the original method
-  //   return originalFunctions["rect"].apply(this, arguments);
-  // };
-
-  // originalFunctions["background"] = context.background;
-  // context.background = function () {
-  //   markInitFrame(context);
-
-  //   // tracking for rect
-  //   if (!objects[`background${objectCounter}`])
-  //     objects[`background${objectCounter}`] = {
-  //       type: "background",
-  //       frames: [],
-  //     };
-  //   objects[`background${objectCounter}`].frames.push({
-  //     frame: lottieFrameCount,
-  //     params: context.color(...arguments).toString("#rrggbb"),
-  //   });
-  //   objectCounter++;
-
-  //   // Now, call the original method
-  //   return originalFunctions["background"].apply(this, arguments);
-  // };
 }
 
 export function detachInterceptor(p5Instance: any) {

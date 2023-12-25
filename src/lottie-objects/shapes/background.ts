@@ -7,7 +7,7 @@ export class LottieShapeBackground extends LottieShape {
   args: any[];
 
   constructor({ name = "default", args = [] }) {
-    super();
+    super({});
     this.name = name;
     console.log(args);
     this.args = args;

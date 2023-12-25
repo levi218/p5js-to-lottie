@@ -7,7 +7,7 @@ export class LottieShapeRect extends LottieShape {
   args: any[];
 
   constructor({ name = "default", args = [] }) {
-    super();
+    super({});
     this.name = name;
     this.args = args;
   }
