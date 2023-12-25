@@ -14,11 +14,11 @@ export class LottieLayer {
     this.shapes.push(shape);
     shape.layer = this;
   }
-  toJson() {
+  toJson(index?: number) {
     return {
       ddd: 0,
       ty: 4, // shape layer
-      ind: 0,
+      ind: index ?? 0,
       st: 0,
       ip: this.animation?.firstFrame ?? 0,
       op: this.animation?.totalFrame ?? 60,

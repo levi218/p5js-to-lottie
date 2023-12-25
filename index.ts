@@ -1,6 +1,7 @@
 import { attachInterceptor, detachInterceptor } from "./src/interceptor";
 import { LottieAnimation } from "./src/lottie-objects/animation";
 import { LottieLayer } from "./src/lottie-objects/layer";
+import { LottieShapeBackground } from "./src/lottie-objects/shapes/background";
 import { LottieShapeEllipse } from "./src/lottie-objects/shapes/ellipse";
 import { LottieShapeRect } from "./src/lottie-objects/shapes/rect";
 
@@ -13,6 +14,7 @@ async function _saveLottie(
     units: "seconds",
   }
 ) {
+  console.log("this", this);
   // validate parameters
   if (!callback) {
     throw TypeError("callback parameter must be provided");
@@ -101,8 +103,6 @@ async function _saveLottie(
   console.log(recordedData);
 
   const animation = new LottieAnimation({ frameRate: 60, totalFrame: nFrames });
-  const layer = new LottieLayer({});
-  animation.addLayer(layer);
 
   // TODO: wait 2 secs then use the sample object from
   for (const [key, value] of Object.entries(recordedData)) {
@@ -110,6 +110,8 @@ async function _saveLottie(
     switch (value.type) {
       case "ellipse":
         {
+          const layer = new LottieLayer({});
+          animation.addLayer(layer);
           const shape = new LottieShapeEllipse({
             name: key,
             args: value.frames,
@@ -119,7 +121,20 @@ async function _saveLottie(
         break;
       case "rect":
         {
+          const layer = new LottieLayer({});
+          animation.addLayer(layer);
           const shape = new LottieShapeRect({
+            name: key,
+            args: value.frames,
+          });
+          layer.addShape(shape);
+        }
+        break;
+      case "background":
+        {
+          const layer = new LottieLayer({});
+          animation.addLayer(layer);
+          const shape = new LottieShapeBackground({
             name: key,
             args: value.frames,
           });

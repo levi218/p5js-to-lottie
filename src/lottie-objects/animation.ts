@@ -42,7 +42,7 @@ export class LottieAnimation {
       fr: this.frameRate,
       w: this.width,
       h: this.height,
-      layers: this.layers.map((e) => e.toJson()),
+      layers: this.layers.map((e,i) => e.toJson(i)).reverse(),
     };
   }
 }

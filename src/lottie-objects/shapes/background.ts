@@ -2,44 +2,41 @@ import { LottieShape } from "../shape";
 import { hexToRgb } from "../../../utils/hexToRgb";
 import { Optimizer } from "../../optimizer";
 
-export class LottieShapeRect extends LottieShape {
+export class LottieShapeBackground extends LottieShape {
   name: string;
   args: any[];
 
   constructor({ name = "default", args = [] }) {
     super();
     this.name = name;
+    console.log(args);
     this.args = args;
   }
+
   toJson() {
     // ellipse(x, y, w, [h])
-    const color = hexToRgb(this.args[0].fill);
+    const width = this.layer?.animation?.width ?? 0;
+    const height = this.layer?.animation?.height ?? 0;
+    const color = hexToRgb(this.args[0].params);
+    console.log(color, width, height);
     return {
       ty: "gr",
-      nm: "Rectangle Group",
-      // ...(index!==undefined ? { ind: index } : {}),
+      nm: "Background Group",
+      // ...index!==undefined ? {ind: index} : {},
       it: [
         // shape definition
         {
           ty: "rc",
-          nm: "Rectangle",
+          nm: "Background",
           // position
           p: {
             a: 0,
-            k: [
-              // 0, 0,
-              this.args[0].params[2] / 2,
-              (this.args[0].params[3] ?? this.args[0].params[2]) / 2,
-            ],
+            k: [width / 2, height / 2],
           },
           // size
           s: {
             a: 0,
-            k: [
-              // 50, 50,
-              this.args[0].params[2],
-              this.args[0].params[3] ?? this.args[0].params[2],
-            ], // take width, height of first frame
+            k: [width, height],
           },
           r: {
             a: 0,
@@ -60,7 +57,6 @@ export class LottieShapeRect extends LottieShape {
           },
           r: 1,
         },
-        // transform definition
         {
           ty: "tr",
           a: {
@@ -69,25 +65,8 @@ export class LottieShapeRect extends LottieShape {
           },
           // position
           p: {
-            a: 1,
-            k: new Optimizer().process(
-              this.args.map((e) => [e.params[0], e.params[1]])
-            ),
-            // k: [
-            //   ...this.args.map((e, i) => ({
-            //     t: Math.round(e.frame),
-            //     s: [e.params[0], e.params[1]],
-            //     h: 0,
-            //     o: {
-            //       x: [0, 0],
-            //       y: [0, 0],
-            //     },
-            //     i: {
-            //       x: [1, 1],
-            //       y: [1, 1],
-            //     },
-            //   })),
-            // ],
+            a: 0,
+            k: [0,0]
           },
           // scale
           s: { a: 0, k: [100, 100] },

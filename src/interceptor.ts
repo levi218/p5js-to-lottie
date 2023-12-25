@@ -18,54 +18,112 @@ export function attachInterceptor(p5Instance: any) {
   console.log("attaching interceptor...", p5Instance);
   objects = {};
   lottieFrameCount = 0;
+  const context = p5Instance._isGlobal ? window : p5Instance;
 
-  originalFunctions["_renderEllipse"] = p5Instance._renderEllipse;
-  p5Instance._renderEllipse = function () {
-    markInitFrame(this);
-
-    // tracking for ellipse
-    if (!objects[`ellipse${objectCounter}`])
-      objects[`ellipse${objectCounter}`] = {
-        type: "ellipse",
-        frames: [],
-      };
-    objects[`ellipse${objectCounter}`].frames.push({
-      frame: lottieFrameCount,
-      params: arguments,
-      fill: this.drawingContext.fillStyle,
-    });
-    objectCounter++;
-
-    // Now, call the original method
-    return originalFunctions["_renderEllipse"].apply(this, arguments);
+  const interceptFuncMap: Record<string, (context: any, args: any) => object> = {
+    ellipse: (context, args) => ({
+      params: args,
+      fill: context.drawingContext.fillStyle,
+    }),
+    rect: (context, args) => ({
+      params: args,
+      fill: context.drawingContext.fillStyle,
+    }),
+    background: (context, args) => ({
+      params: context.color(...args).toString("#rrggbb"),
+    }),
   };
 
-  originalFunctions["_renderRect"] = p5Instance._renderRect;
-  p5Instance._renderRect = function () {
-    markInitFrame(this);
+  for (const [key, value] of Object.entries(interceptFuncMap)) {
+    originalFunctions[key] = context[key];
+    context[key] = function () {
+      markInitFrame(context);
 
-    // tracking for rect
-    if (!objects[`rect${objectCounter}`])
-      objects[`rect${objectCounter}`] = {
-        type: "rect",
-        frames: [],
-      };
-    objects[`rect${objectCounter}`].frames.push({
-      frame: lottieFrameCount,
-      params: arguments,
-      fill: this.drawingContext.fillStyle,
-    });
-    objectCounter++;
+      // tracking for ellipse
+      if (!objects[`${key}${objectCounter}`])
+        objects[`${key}${objectCounter}`] = {
+          type: key,
+          frames: [],
+        };
+      objects[`${key}${objectCounter}`].frames.push({
+        frame: lottieFrameCount,
+        ...value(context, arguments)
+      });
+      objectCounter++;
 
-    // Now, call the original method
-    return originalFunctions["_renderRect"].apply(this, arguments);
-  };
+      // Now, call the original method
+      return originalFunctions["ellipse"].apply(this, arguments);
+    };
+  }
+
+  // originalFunctions["ellipse"] = context.ellipse;
+  // context.ellipse = function () {
+  //   markInitFrame(context);
+
+  //   // tracking for ellipse
+  //   if (!objects[`ellipse${objectCounter}`])
+  //     objects[`ellipse${objectCounter}`] = {
+  //       type: "ellipse",
+  //       frames: [],
+  //     };
+  //   objects[`ellipse${objectCounter}`].frames.push({
+  //     frame: lottieFrameCount,
+  //     params: arguments,
+  //     fill: context.drawingContext.fillStyle,
+  //   });
+  //   objectCounter++;
+
+  //   // Now, call the original method
+  //   return originalFunctions["ellipse"].apply(this, arguments);
+  // };
+
+  // originalFunctions["rect"] = context.rect;
+  // context.rect = function () {
+  //   markInitFrame(context);
+
+  //   // tracking for rect
+  //   if (!objects[`rect${objectCounter}`])
+  //     objects[`rect${objectCounter}`] = {
+  //       type: "rect",
+  //       frames: [],
+  //     };
+  //   objects[`rect${objectCounter}`].frames.push({
+  //     frame: lottieFrameCount,
+  //     params: arguments,
+  //     fill: context.drawingContext.fillStyle,
+  //   });
+  //   objectCounter++;
+
+  //   // Now, call the original method
+  //   return originalFunctions["rect"].apply(this, arguments);
+  // };
+
+  // originalFunctions["background"] = context.background;
+  // context.background = function () {
+  //   markInitFrame(context);
+
+  //   // tracking for rect
+  //   if (!objects[`background${objectCounter}`])
+  //     objects[`background${objectCounter}`] = {
+  //       type: "background",
+  //       frames: [],
+  //     };
+  //   objects[`background${objectCounter}`].frames.push({
+  //     frame: lottieFrameCount,
+  //     params: context.color(...arguments).toString("#rrggbb"),
+  //   });
+  //   objectCounter++;
+
+  //   // Now, call the original method
+  //   return originalFunctions["background"].apply(this, arguments);
+  // };
 }
 
 export function detachInterceptor(p5Instance: any) {
   console.log("detaching interceptor...", p5Instance);
+  const context = p5Instance._isGlobal ? window : p5Instance;
   for (const [key, value] of Object.entries(originalFunctions)) {
-    p5Instance[key] = value;
+    context[key] = value;
   }
 
   originalFunctions = {};
