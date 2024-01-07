@@ -26,4 +26,8 @@ jobs:
       run: |
         npm install
         npx webpack
+
+    - name: Run Playwright tests
+      uses: microsoft/playwright-github-action@v1.5.5
+          
           
