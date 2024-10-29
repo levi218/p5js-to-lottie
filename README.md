@@ -4,11 +4,14 @@
 
 Convert your favorite creative coding library to your favorite animation format. 
 
-Motivation:
-- Currently, p5js only supports generates a gif from a sketch. 
-- GIFs are large, Lotties are small.
-- Lotties are normally created with dedicated animation tools, but I'm a dev, I like to code my animation.
-- ...
+I also created a Visual Studio Code extension, leveraging the `p5js-to-lottie` library to enable direct preview of your P5.js sketches and Lottie animations within VS Code. You can find it on the Marketplace: [P5.js to Lottie](https://marketplace.visualstudio.com/items?itemName=levi218.p5js-to-lottie).
+
+### Motivation
+
+- **Current Limitations**: P5.js currently only supports generating GIFs from sketches.
+- **File Size**: GIFs are large, while Lottie files are small and efficient.
+- **Developer-Friendly**: Lottie animations are typically created with dedicated animation tools, but as a developer, I prefer coding my animations.
+- **Enhanced Workflow**: This extension streamlines the process of converting and previewing animations directly within your development environment.
 
 ## Getting started.
 
