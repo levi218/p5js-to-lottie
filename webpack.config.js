@@ -1,16 +1,14 @@
 const path = require("path");
 module.exports = {
   entry: "./index.ts",
-  mode: "development",
+  // override with --mode development for an unminified bundle (see `yarn dev`)
+  mode: "production",
   module: {
     rules: [
       {
         test: /\.tsx?$/,
         use: "ts-loader",
-        exclude: [
-          /node_modules/,
-          /tests/
-        ],
+        exclude: [/node_modules/, /tests/],
       },
     ],
   },
@@ -20,9 +18,6 @@ module.exports = {
   output: {
     filename: "bundle.js",
     path: path.resolve(__dirname, "dist"),
-    clean: true
-  },
-  optimization: {
-    minimize: false,
+    clean: true,
   },
 };

@@ -10,11 +10,21 @@ export class LottieLayer {
     this.shapes = [];
     this.animation = undefined;
   }
+  // Lottie assets / fonts this layer needs at the animation level
+  get assets(): object[] {
+    return [];
+  }
+  get fonts(): { fName: string }[] {
+    return [];
+  }
+  get chars(): object[] {
+    return [];
+  }
   addShape(shape: LottieShape) {
     this.shapes.push(shape);
     shape.layer = this;
   }
-  toJson(index?: number) {
+  toJson(index?: number): Record<string, any> {
     return {
       ddd: 0,
       ty: 4, // shape layer

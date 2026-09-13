@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>p5js-to-lottie</title>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script>
+<script src="../libs/lottie-player.js"></script>
+<script src="../dist/bundle.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #0f1115;
+    --panel: #171a21;
+    --border: #262b36;
+    --text: #eef0f4;
+    --muted: #9aa3b2;
+    --accent: #ff5470;
+    --accent2: #3ac6ff;
+    --good: #6be18a;
+    --mono: "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  header.hero { padding: 72px 0 40px; }
+  .eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 12px;
+    margin-bottom: 20px;
+  }
+  h1 { font-size: 44px; line-height: 1.15; margin: 0 0 16px; }
+  h1 span { color: var(--accent); }
+  .lede { font-size: 18px; color: var(--muted); max-width: 620px; margin: 0 0 28px; }
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn {
+    font: inherit; font-size: 14px; font-weight: 600;
+    padding: 12px 20px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--panel); color: var(--text); cursor: pointer;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #180509; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.small { font-size: 12px; padding: 8px 12px; }
+  a.btn { text-decoration: none; display: inline-flex; align-items: center; }
+
+  section { padding: 40px 0; border-top: 1px solid var(--border); }
+
+  .example-head { margin-bottom: 20px; }
+  .step { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent2); }
+  .example-head h2 { margin: 4px 0 6px; font-size: 26px; }
+  .example-head p { margin: 0; color: var(--muted); max-width: 720px; }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 800px) { .demo-grid { grid-template-columns: 1fr; } }
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    min-width: 0;
+  }
+  .stage h3 { margin: 0 0 14px; font-size: 14px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  canvas, lottie-player { display: block; border-radius: 10px; background: #fff; max-width: 100%; }
+  .status { margin-top: 12px; font-size: 13px; color: var(--muted); min-height: 18px; }
+  .status.ready { color: var(--good); }
+
+  .code-details { margin-top: 14px; }
+  .code-details summary {
+    cursor: pointer; font-size: 13px; font-weight: 600; color: var(--accent2);
+    list-style: none; user-select: none;
+  }
+  .code-details summary::-webkit-details-marker { display: none; }
+  .code-details summary::before { content: "▸ "; }
+  .code-details[open] summary::before { content: "▾ "; }
+  .code-details pre { margin: 10px 0 0; font-size: 12px; }
+
+  .sizes {
+    margin-top: 24px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 18px;
+  }
+  .sizes h3 { margin: 0 0 14px; font-size: 14px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .size-row {
+    display: grid; grid-template-columns: 240px 1fr 90px auto; gap: 12px; align-items: center;
+    font-size: 13px; padding: 5px 0;
+  }
+  @media (max-width: 700px) { .size-row { grid-template-columns: 1fr 80px auto; } .size-row .bar { grid-column: 1 / -1; order: 3; } }
+  .size-row code { font-size: 12px; }
+  .size-row .muted { color: var(--muted); }
+  .bar { height: 12px; background: var(--bg); border-radius: 6px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent2); border-radius: 6px; transition: width 0.4s; }
+  .size-row[data-kind="gif"] .bar i { background: var(--accent); }
+  .size-row[data-kind="lottie"] .bar i { background: var(--good); }
+  .size-row .value { font-family: var(--mono); text-align: right; }
+  .size-row a { min-width: 92px; justify-content: center; }
+  .summary { margin: 12px 0 0; font-size: 14px; color: var(--good); min-height: 20px; }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 800px) { .features { grid-template-columns: 1fr; } }
+  .feature {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+  }
+  .feature h4 { margin: 0 0 6px; font-size: 15px; }
+  .feature p { margin: 0; font-size: 13px; color: var(--muted); }
+  .feature .tag { font-size: 11px; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  pre {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.6;
+  }
+  code { font-family: var(--mono); }
+  .comment { color: var(--muted); }
+  .kw { color: var(--accent2); }
+  .str { color: #ffd479; }
+
+  footer { padding: 32px 0 60px; color: var(--muted); font-size: 13px; }
+  footer a { color: var(--accent2); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <span class="eyebrow">p5.js &rarr; Lottie</span>
+      <h1>Code your animation.<br>Ship it as a <span>Lottie</span>, not a GIF.</h1>
+      <p class="lede">
+        p5js-to-lottie records a running p5.js sketch — shapes, curves, text, images,
+        gradients, translate/rotate/scale — and re-encodes it as a compact,
+        vector, infinitely-scalable Lottie file instead of a bulky raster GIF.
+      </p>
+      <div class="cta-row">
+        <a class="btn primary" href="#examples">See examples</a>
+        <a class="btn" href="https://github.com/" target="_blank" rel="noopener">View on GitHub</a>
+      </div>
+    </header>
+
+    <template id="example-body">
+      <div class="demo-grid">
+        <div class="stage">
+          <h3>Live p5.js sketch</h3>
+          <div class="sketch"></div>
+          <details class="code-details">
+            <summary>View sketch code (excerpt)</summary>
+            <pre><code></code></pre>
+          </details>
+        </div>
+        <div class="stage">
+          <h3>Exported Lottie output</h3>
+          <lottie-player background="#ffffff" speed="1" style="width: 100%; max-width: 400px; height: 400px"
+            renderer="canvas" loop="1" controls="1" autoplay="0"></lottie-player>
+          <div class="status">Waiting to record&hellip;</div>
+        </div>
+      </div>
+      <div class="sizes">
+        <h3>File size, same clip</h3>
+        <div class="size-row" data-kind="gif">
+          <span><code>saveGif()</code> <span class="muted">.gif</span></span>
+          <div class="bar"><i></i></div><span class="value">&hellip;</span>
+          <a class="btn small" hidden>.gif</a>
+        </div>
+        <div class="size-row" data-kind="pretty">
+          <span><code>saveLottie()</code> <span class="muted">.json, minify: false</span></span>
+          <div class="bar"><i></i></div><span class="value">&hellip;</span>
+          <a class="btn small" hidden>.json</a>
+        </div>
+        <div class="size-row" data-kind="json">
+          <span><code>saveLottie()</code> <span class="muted">.json, minify: true</span></span>
+          <div class="bar"><i></i></div><span class="value">&hellip;</span>
+          <a class="btn small" hidden>.json</a>
+        </div>
+        <div class="size-row" data-kind="lottie">
+          <span><code>saveLottie()</code> <span class="muted">.lottie (dotLottie v2)</span></span>
+          <div class="bar"><i></i></div><span class="value">&hellip;</span>
+          <a class="btn small" hidden>.lottie</a>
+        </div>
+        <p class="summary"></p>
+      </div>
+    </template>
+
+    <section id="examples">
+      <div class="example-head">
+        <span class="step">01 &middot; Simple</span>
+        <h2>Transforms</h2>
+        <p>A spinning square, an orbiting circle and a pulsing square &mdash; translate(), rotate(), scale() and push()/pop() baked into Lottie transforms.</p>
+      </div>
+      <div class="example" id="ex-transform">
+        <script type="text/plain" class="excerpt">push();
+translate(200, 200);
+rotate(angle);
+fill(245, 10, 20);
+rect(-30, -30, 60, 60);
+pop();
+
+push();
+translate(200, 200);
+rotate(-angle * 1.5);
+translate(120, 0);
+fill(20, 120, 245);
+ellipse(0, 0, 30, 30);
+pop();
+
+push();
+translate(60, 60);
+scale(1 + 0.5 * Math.sin(angle * 2));
+fill(40, 200, 90);
+rect(-15, -15, 30, 30);
+pop();</script>
+      </div>
+    </section>
+
+    <section>
+      <div class="example-head">
+        <span class="step">02 &middot; Intermediate</span>
+        <h2>Curves &amp; arcs</h2>
+        <p>bezier(), Catmull-Rom curve(), arc() in its CHORD / PIE / default modes, a curveVertex() blob and a bezierVertex() + quadraticVertex() leaf, all animated.</p>
+      </div>
+      <div class="example" id="ex-curve">
+        <script type="text/plain" class="excerpt">bezier(30, 80, 120 + 60 * Math.sin(t * 0.05), 0, 160, 150, 250, 60);
+curve(0, 320, 40, 180, 360, 200, 400, 60);
+
+const mouth = 0.3 + 0.25 * Math.sin(t * 0.1);
+arc(80, 260, 100, 100, mouth, TWO_PI - mouth);
+arc(200, 260, 90, 60, 0, PI + QUARTER_PI, CHORD);
+
+beginShape();
+for (let i = 0; i < 6; i++) {
+  const a = (i / 6) * TWO_PI;
+  const r = 40 + 10 * Math.sin(t * 0.08 + i * 2);
+  curveVertex(320 + r * Math.cos(a), 90 + r * Math.sin(a));
+}
+endShape(CLOSE);
+
+beginShape();
+vertex(x, 370);
+bezierVertex(x + 20, 320, x + 70, 320, x + 90, 370);
+quadraticVertex(x + 45, 400, x, 370);
+endShape(CLOSE);</script>
+      </div>
+    </section>
+
+    <section>
+      <div class="example-head">
+        <span class="step">03 &middot; Complex</span>
+        <h2>Solar system</h2>
+        <p>Seven planets on nested transforms, gradient-shaded spheres, Saturn's arc() rings, a quadraticVertex() comet with a fading gradient tail, text() labels and an image() starfield.</p>
+      </div>
+      <div class="example" id="ex-solar">
+        <script type="text/plain" class="excerpt">// starfield painted once, blitted every frame
+p.image(starfield, 0, 0);
+
+for (const planet of PLANETS) {
+  const angle = planet.phase + frame * EARTH_SPEED * (72 / planet.orbit) ** 1.5;
+  p.push();
+  p.translate(cx + planet.orbit * Math.cos(angle), cy + planet.orbit * Math.sin(angle));
+
+  // far half of Saturn's rings, behind the planet
+  if (planet.rings) ring(p.PI, p.TWO_PI);
+
+  // shaded sphere: a radial gradient leaning toward the sun
+  const shade = ctx.createRadialGradient(lx, ly, 0, lx, ly, size);
+  shade.addColorStop(0, planet.colors[0]);
+  shade.addColorStop(1, planet.colors[1]);
+  ctx.fillStyle = shade;
+  p.circle(0, 0, size);
+
+  if (planet.rings) ring(0, p.PI);
+
+  p.textAlign(p.CENTER, p.TOP);
+  p.text(planet.name, 0, size / 2 + 4);
+  p.pop();
+}
+
+// comet tail: a quadratic-curve teardrop with a fading linear gradient
+ctx.fillStyle = fade;
+p.beginShape();
+p.vertex(hx - uy * 3, hy + ux * 3);
+p.quadraticVertex(midX - uy * 7, midY + ux * 7, ex, ey);
+p.quadraticVertex(midX + uy * 7, midY - ux * 7, hx + uy * 3, hy - ux * 3);
+p.endShape(p.CLOSE);</script>
+      </div>
+    </section>
+
+    <section id="usage">
+      <h3 style="margin-top:0;">Get started</h3>
+      <pre><code><span class="comment">&lt;!-- after loading p5.js --&gt;</span>
+&lt;script src=<span class="str">"https://cdn.jsdelivr.net/npm/p5js-to-lottie@latest/dist/bundle.js"</span>&gt;&lt;/script&gt;
+
+<span class="comment">// sketch.js</span>
+<span class="kw">function</span> draw() {
+  push();
+  translate(width / 2, height / 2);
+  rotate(frameCount * 0.05);
+  fill(<span class="str">245, 10, 20</span>);
+  rect(-30, -30, 60, 60);
+  pop();
+}
+
+<span class="comment">// capture 4 seconds: `animation` is the Lottie JSON, `file` a ready-to-save Blob</span>
+saveLottie(4, (animation, file) =&gt; {
+  document.querySelector(<span class="str">"lottie-player"</span>).load(JSON.stringify(animation));
+}, {
+  minify: <span class="kw">true</span>,          <span class="comment">// default: no spaces or line endings</span>
+  format: <span class="str">"dotlottie"</span>,  <span class="comment">// or "json" (default)</span>
+});</code></pre>
+    </section>
+
+    <footer>
+      Built on top of p5.js and lottie-web. See the <code>example/</code> folder in this repo for more focused, single-shape demos.
+    </footer>
+  </div>
+
+<script src="../example/solar-system/scene.js"></script>
+<script>
+(function () {
+  const CAPTURE_SECONDS = 4;
+
+  // Scenes are pure functions of the frame number, so the live panel can be
+  // redrawn from the player's own current frame once the Lottie is loaded:
+  // two independently-clocked renderers would otherwise drift apart.
+  function drawTransform(p, frame) {
+    const angle = frame * 0.05;
+    p.background(255);
+    p.noStroke();
+
+    p.push();
+    p.translate(200, 200);
+    p.rotate(angle);
+    p.fill(245, 10, 20);
+    p.rect(-30, -30, 60, 60);
+    p.pop();
+
+    p.push();
+    p.translate(200, 200);
+    p.rotate(-angle * 1.5);
+    p.translate(120, 0);
+    p.fill(20, 120, 245);
+    p.ellipse(0, 0, 30, 30);
+    p.pop();
+
+    p.push();
+    p.translate(60, 60);
+    p.scale(1 + 0.5 * Math.sin(angle * 2));
+    p.fill(40, 200, 90);
+    p.rect(-15, -15, 30, 30);
+    p.pop();
+  }
+
+  function drawCurves(p, t) {
+    p.background(250);
+
+    p.noFill();
+    p.stroke(30, 90, 200);
+    p.strokeWeight(6);
+    p.bezier(30, 80, 120 + 60 * Math.sin(t * 0.05), 0, 160, 150, 250, 60);
+
+    p.stroke(200, 40, 90);
+    p.strokeWeight(4);
+    p.curve(0, 320, 40, 180, 360, 200, 400, 60);
+
+    p.fill(250, 190, 40);
+    p.stroke(40);
+    p.strokeWeight(3);
+    const mouth = 0.3 + 0.25 * Math.sin(t * 0.1);
+    p.arc(80, 260, 100, 100, mouth, p.TWO_PI - mouth);
+    p.fill(120, 200, 120);
+    p.arc(200, 260, 90, 60, 0, p.PI + p.QUARTER_PI, p.CHORD);
+    p.push();
+    p.translate(320, 260);
+    p.rotate(t * 0.03);
+    p.fill(160, 110, 220);
+    p.arc(0, 0, 90, 90, 0, p.HALF_PI, p.PIE);
+    p.pop();
+
+    p.noStroke();
+    p.fill(20, 170, 190);
+    p.beginShape();
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * p.TWO_PI;
+      const r = 40 + 10 * Math.sin(t * 0.08 + i * 2);
+      p.curveVertex(320 + r * Math.cos(a), 90 + r * Math.sin(a));
+    }
+    p.endShape(p.CLOSE);
+
+    p.fill(90, 160, 60);
+    p.stroke(30, 80, 20);
+    p.strokeWeight(2);
+    const x = 150 + 100 * Math.sin(t * 0.03);
+    p.beginShape();
+    p.vertex(x, 370);
+    p.bezierVertex(x + 20, 320, x + 70, 320, x + 90, 370);
+    p.quadraticVertex(x + 45, 400, x, 370);
+    p.endShape(p.CLOSE);
+  }
+
+  const EXAMPLES = [
+    { id: "ex-transform", draw: drawTransform },
+    { id: "ex-curve", draw: drawCurves },
+    { id: "ex-solar", setup: makeStarfield, draw: drawSolarSystem },
+  ];
+
+  const formatBytes = (n) =>
+    n < 1024 ? `${n} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1024 / 1024).toFixed(2)} MB`;
+
+  function mount(example) {
+    const root = document.getElementById(example.id);
+    const excerpt = root.querySelector(".excerpt").textContent;
+    root.replaceChildren(document.getElementById("example-body").content.cloneNode(true));
+    root.querySelector("code").textContent = excerpt;
+
+    const player = root.querySelector("lottie-player");
+    const status = root.querySelector(".status");
+    const sizes = {};
+    let frame = 0;
+    let synced = false; // draw the player's frame instead of our own clock
+    let state;
+
+    const instance = new p5((p) => {
+      p.setup = () => {
+        p.createCanvas(400, 400).parent(root.querySelector(".sketch"));
+        state = example.setup && example.setup(p);
+      };
+      p.draw = () => {
+        const lottie = synced && player._lottie;
+        example.draw(p, lottie ? lottie.currentFrame : frame++, state);
+      };
+    });
+
+    function setSize(kind, blob, filename) {
+      sizes[kind] = blob.size;
+      const row = root.querySelector(`.size-row[data-kind="${kind}"]`);
+      row.querySelector(".value").textContent = formatBytes(blob.size);
+      const link = row.querySelector("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.hidden = false;
+
+      const max = Math.max(...Object.values(sizes));
+      for (const [k, size] of Object.entries(sizes)) {
+        root.querySelector(`.size-row[data-kind="${k}"] .bar i`).style.width = `${Math.max(1, (size / max) * 100)}%`;
+      }
+      if (sizes.gif && sizes.lottie) {
+        root.querySelector(".summary").textContent =
+          `The .lottie file is ${Math.round(sizes.gif / sizes.lottie)}× smaller than the GIF of the same clip.`;
+      }
+    }
+
+    // Re-run the sketch from frame 0 on its own clock while a recorder drives redraw().
+    async function capture(record) {
+      const wasSynced = synced;
+      synced = false;
+      frame = 0;
+      try {
+        return await record();
+      } finally {
+        synced = wasSynced;
+      }
+    }
+
+    async function recordLottie() {
+      status.textContent = "Recording with saveLottie()…";
+      const [json, lottieFile] = await capture(
+        () => new Promise((resolve) =>
+          instance.saveLottie(CAPTURE_SECONDS, (json, file) => resolve([json, file]), { format: "dotlottie" }))
+      );
+      // same serializations saveLottie() produces with minify: false / format: "json"
+      const pretty = JSON.stringify(json, null, 2);
+      const minified = JSON.stringify(json);
+      setSize("pretty", new Blob([pretty], { type: "application/json" }), "animation.pretty.json");
+      setSize("json", new Blob([minified], { type: "application/json" }), "animation.json");
+      setSize("lottie", lottieFile, "animation.lottie");
+
+      await player.load(minified);
+      // the canvas renderer can measure a 0px-wide container at load time
+      player.resize();
+      player.setLooping(true);
+      player.play();
+      synced = true;
+      status.textContent = "Captured once — the live panel now redraws from the player's current frame, so both stay in step.";
+      status.classList.add("ready");
+    }
+
+    // saveGif() always downloads; borrow its Blob instead, just to measure it.
+    async function recordGif() {
+      const row = root.querySelector('.size-row[data-kind="gif"] .value');
+      row.textContent = "encoding…";
+      const download = p5.prototype.downloadFile;
+      let gif;
+      p5.prototype.downloadFile = (blob) => { gif = blob; };
+      try {
+        await capture(() => instance.saveGif("animation", CAPTURE_SECONDS, { silent: true }));
+      } finally {
+        p5.prototype.downloadFile = download;
+      }
+      setSize("gif", gif, "animation.gif");
+    }
+
+    return { recordLottie, recordGif, status };
+  }
+
+  const mounted = EXAMPLES.map(mount);
+
+  // Record one sketch at a time (GIF frames are held in memory until encoded),
+  // Lotties first so every player is up before the slow GIF encodes start.
+  setTimeout(async () => {
+    for (const example of mounted) {
+      try {
+        await example.recordLottie();
+      } catch (error) {
+        example.status.textContent = `Recording failed: ${error.message}`;
+      }
+    }
+    for (const example of mounted) {
+      try {
+        await example.recordGif();
+      } catch (error) {
+        example.status.textContent = `GIF comparison failed: ${error.message}`;
+      }
+    }
+  }, 300);
+})();
+</script>
+</body>
+</html>

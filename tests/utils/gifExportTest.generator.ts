@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
 import fs from "fs";
 import gifFrames from "gif-frames";
 
@@ -17,16 +17,15 @@ export const generateGifExportTest = ({
   }) => {
     await page.goto(`/example/${exampleName}`);
     await page.waitForLoadState();
+    // Same starting point as the Lottie export: at least one draw() has run.
+    await page.waitForFunction(() => (window as any).frameCount > 1);
 
-    // DOWNLOAD GIF
     const downloadPromise = page.waitForEvent("download");
     await page.evaluate(() => {
       (window as any).initVar();
       (window as any).saveGif("mySketch", 5, { silent: true });
     });
     const download = await downloadPromise;
-
-    // Wait for the download process to complete and save the downloaded file somewhere.
     await download.saveAs(`${fileStoreLocation}/gif.gif`);
 
     const frameData = await gifFrames({
@@ -35,13 +34,21 @@ export const generateGifExportTest = ({
       outputType: "png",
       cumulative: true,
     });
-    for (const frame of frameData) {
-      frame
-        .getImage()
-        .pipe(
-          fs.createWriteStream(
-            `${fileStoreLocation}/gif_${frame.frameIndex}.png`
+    // Wait for every frame to hit disk; the diff tests read them next.
+    await Promise.all(
+      frameData.map(
+        (frame: any) =>
+          new Promise((resolve, reject) =>
+            frame
+              .getImage()
+              .pipe(
+                fs.createWriteStream(
+                  `${fileStoreLocation}/gif_${frame.frameIndex}.png`
+                )
+              )
+              .on("finish", resolve)
+              .on("error", reject)
           )
-        );
-    }
+      )
+    );
   });

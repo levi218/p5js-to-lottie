@@ -71,10 +71,16 @@ export class Optimizer {
             0
         )
       ) {
-        // extremum
-        segments.push({
-          points: input.slice(lastSegEnd, frameIndex),
-        });
+        // extremum. Two extrema on adjacent frames (common with the tiny
+        // floating-point jitter on an otherwise-constant rotation/scale
+        // value) would otherwise produce a zero-length segment here, which
+        // makes reformAxis report 0 axes and process() misread that as
+        // "already optimized" instead of "nothing to encode".
+        if (frameIndex > lastSegEnd) {
+          segments.push({
+            points: input.slice(lastSegEnd, frameIndex),
+          });
+        }
         lastSegEnd = frameIndex;
       }
     }
@@ -187,9 +193,11 @@ export class Optimizer {
         baseTime += segment.points.length;
         continue;
       }
-      // not optimizable -> each as a timeframe
+      // not optimizable -> each as a timeframe. Segments are contiguous
+      // (segregate slices [lastSegEnd, frameIndex)), so every point is its own
+      // frame; dropping the last one here compressed the timeline by a frame
+      // per fallback segment, which orbiting motion hits dozens of times.
       segment.points.forEach((pointSet, i) => {
-        if (i === segment.points.length - 1) return;
         timeFrames.push({
           type: "point" as const,
           startPoint: {
@@ -199,14 +207,13 @@ export class Optimizer {
         });
       });
 
-      baseTime += segment.points.length - 1;
+      baseTime += segment.points.length;
     }
     return this.toAnimation(timeFrames);
   }
 
   toAnimation(timeFrames: TimeFrame[]) {
     const that = this;
-    console.log(timeFrames);
     return timeFrames.flatMap((frame, index) => {
       const arr = [];
       if (frame.type === "curve") {
@@ -253,6 +260,21 @@ export class Optimizer {
       return arr;
     });
   }
+}
+
+const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+// Static when every frame agrees (smaller output, nothing for the curve
+// fitter to approximate); otherwise curve-fit keyframes.
+export function animatedProperty(values: number[][]) {
+  const first = values[0];
+  const constant = values.every((v) =>
+    v.every((n, i) => Math.abs(n - first[i]) < 1e-6)
+  );
+  if (constant) {
+    return { a: 0, k: first.length === 1 ? round2(first[0]) : first.map(round2) };
+  }
+  return { a: 1, k: new Optimizer().process(values) };
 }
 
 // const output = {

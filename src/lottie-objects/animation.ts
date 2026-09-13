@@ -34,7 +34,14 @@ export class LottieAnimation {
     layer.animation = this;
   }
   toJson() {
+    const unique = <T>(items: T[], key: (item: T) => string) => [
+      ...new Map(items.map((item) => [key(item), item])).values(),
+    ];
     return {
+      assets: unique(this.layers.flatMap((e) => e.assets), (e: any) => e.id),
+      fonts: { list: unique(this.layers.flatMap((e) => e.fonts), (e) => e.fName) },
+      // glyph objects are cached per character + font, so identity dedupes them
+      chars: [...new Set(this.layers.flatMap((e) => e.chars))],
       nm: this.name,
       v: this.version,
       ip: this.firstFrame,

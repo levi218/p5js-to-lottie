@@ -1,6 +1,6 @@
 {
   "name": "p5js-to-lottie",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Save p5js sketch as a Lottie file",
   "author": "Nguyen Quang Huy <nguyenquanghuy1997@gmail.com>",
   "license": "MIT",
@@ -9,8 +9,8 @@
     "dist"
   ],
   "scripts": {
-    "dev": "webpack --watch & npx http-server",
-    "start": "webpack & npx http-server -p 8000",
+    "dev": "webpack --watch --mode development & npx http-server",
+    "start": "webpack && npx http-server -p 8000",
     "build": "webpack",
     "test": "yarn playwright test",
     "playwright-install": "yarn playwright install"

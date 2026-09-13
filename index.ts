@@ -1,22 +1,49 @@
+import { dotLottie } from "./src/dotlottie";
 import { attachInterceptor, detachInterceptor } from "./src/interceptor";
 import { LottieAnimation } from "./src/lottie-objects/animation";
 import { LottieLayer } from "./src/lottie-objects/layer";
 import { LottieShape } from "./src/lottie-objects/shape";
 import { LottieShapeBackground } from "./src/lottie-objects/shapes/background";
 import { LottieShapeEllipse } from "./src/lottie-objects/shapes/ellipse";
+import { LottieImageLayer } from "./src/lottie-objects/image";
+import { LottieShapeLine } from "./src/lottie-objects/shapes/line";
+import { LottieShapePath } from "./src/lottie-objects/shapes/path";
 import { LottieShapeRect } from "./src/lottie-objects/shapes/rect";
+import { LottieShapeTriangle } from "./src/lottie-objects/shapes/triangle";
+import { LottieTextLayer } from "./src/lottie-objects/text";
+
+const lottieClassTypeMap: Record<string, typeof LottieShape> = {
+  ellipse: LottieShapeEllipse,
+  rect: LottieShapeRect,
+  background: LottieShapeBackground,
+  line: LottieShapeLine,
+  point: LottieShapeEllipse,
+  circle: LottieShapeEllipse,
+  square: LottieShapeRect,
+  triangle: LottieShapeTriangle,
+  bezier: LottieShapePath,
+  curve: LottieShapePath,
+  arc: LottieShapePath,
+  endShape: LottieShapePath,
+};
+
+// captured types that are whole layers rather than shapes
+const lottieLayerTypeMap: Record<string, typeof LottieTextLayer | typeof LottieImageLayer> = {
+  text: LottieTextLayer,
+  image: LottieImageLayer,
+};
 
 async function _saveLottie(
   this: any,
   duration: number,
-  callback: (result: any) => void,
-  options = {
-    delay: 0,
-    units: "seconds",
-  }
+  callback: (result: any, file: Blob) => void,
+  options: {
+    delay?: number;
+    units?: "seconds" | "frames";
+    minify?: boolean;
+    format?: "json" | "dotlottie";
+  } = {}
 ) {
-  console.log("this", this);
-  // validate parameters
   if (!callback) {
     throw TypeError("callback parameter must be provided");
   }
@@ -24,35 +51,33 @@ async function _saveLottie(
     throw TypeError("Duration parameter must be a number");
   }
 
-  // extract variables for more comfortable use
-  const delay = (options && options.delay) || 0; // in seconds
-  const units = (options && options.units) || "seconds"; // either 'seconds' or 'frames'
+  const delay = (options && options.delay) || 0;
+  const units = (options && options.units) || "seconds";
 
-  // if arguments in the options object are not correct, cancel operation
   if (typeof delay !== "number") {
     throw TypeError("Delay parameter must be a number");
   }
-  // if units is not seconds nor frames, throw error
   if (units !== "seconds" && units !== "frames") {
     throw TypeError('Units parameter must be either "frames" or "seconds"');
   }
-
-  this._recording = true;
-
-  // get the project's framerate
-  let _frameRate = this._targetFrameRate;
-  // if it is undefined or some non useful value, assume it's 60
-  if (_frameRate === Infinity || _frameRate === undefined || _frameRate === 0) {
-    _frameRate = 60;
+  const minify = options?.minify ?? true;
+  const format = options?.format ?? "json";
+  if (typeof minify !== "boolean") {
+    throw TypeError("Minify parameter must be a boolean");
+  }
+  if (format !== "json" && format !== "dotlottie") {
+    throw TypeError('Format parameter must be either "json" or "dotlottie"');
   }
 
-  // check the mode we are in and how many frames
-  // that duration translates to
-  const nFrames = units === "seconds" ? duration * _frameRate : duration;
-  const nFramesDelay = units === "seconds" ? delay * _frameRate : delay;
+  let frameRate = this._targetFrameRate;
+  if (frameRate === Infinity || frameRate === undefined || frameRate === 0) {
+    frameRate = 60;
+  }
+
+  const nFrames = units === "seconds" ? duration * frameRate : duration;
+  const nFramesDelay = units === "seconds" ? delay * frameRate : delay;
   const totalNumberOfFrames = nFrames + nFramesDelay;
 
-  // initialize variables for the frames processing
   let frameIterator = nFramesDelay;
   if (this._isGlobal) {
     (window as any).frameCount = frameIterator;
@@ -60,73 +85,63 @@ async function _saveLottie(
     this.frameCount = frameIterator;
   }
 
-  // We first take every frame that we are going to use for the animation
-  //   let frames = [];
-
-  // stop the loop since we are going to manually redraw
+  this._recording = true;
   this.noLoop();
 
-  // Defer execution until the rest of the call stack finishes, allowing the
-  // rest of `setup` to be called (and, importantly, canvases hidden in setup
-  // to be unhidden.)
-  //
-  // Waiting on this empty promise means we'll continue as soon as setup
-  // finishes without waiting for another frame.
+  // Let the rest of setup() finish (and hidden canvases unhide) before redrawing.
   await Promise.resolve();
 
-  // attach interceptor
   attachInterceptor(this);
-  while (frameIterator < totalNumberOfFrames) {
-    /*
-        we draw the next frame. this is important, since
-        busy sketches or low end devices might take longer
-        to render some frames. So we just wait for the frame
-        to be drawn and immediately save it to a buffer and continue
-      */
-    this.redraw();
-    // TODO: capture everything in this redraw cycle
-
-    // depending on the context we'll extract the pixels one way
-    // or another
-    // let data = this.drawingContext.getImageData(
-    //   0,
-    //   0,
-    //   this.width,
-    //   this.height
-    // ).data;
-
-    // frames.push(data);
-    frameIterator++;
-
-    await new Promise((resolve) => setTimeout(resolve, 0));
+  let recordedData: Record<string, any>;
+  try {
+    while (frameIterator < totalNumberOfFrames) {
+      this.redraw();
+      frameIterator++;
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+  } finally {
+    // Always restore the sketch's own draw functions and loop, even if draw() threw.
+    recordedData = detachInterceptor(this);
+    this._recording = false;
+    this.loop();
   }
-  const recordedData = detachInterceptor(this);
-  console.log(recordedData);
 
-  const animation = new LottieAnimation({ frameRate: 60, totalFrame: nFrames });
+  const animation = new LottieAnimation({
+    frameRate,
+    totalFrame: nFrames,
+    width: this.width,
+    height: this.height,
+  });
 
-  const lottieClassTypeMap: Record<string, typeof LottieShape> = {
-    ellipse: LottieShapeEllipse,
-    rect: LottieShapeRect,
-    background: LottieShapeBackground,
-  };
-  // TODO: wait 2 secs then use the sample object from
   for (const [key, value] of Object.entries(recordedData)) {
-    console.log(value);
-    const ShapeClass = lottieClassTypeMap[value.type];
+    if (value.type === "text" && value.frames.some((e: any) => e.stroke)) {
+      // stroke layer first: layers added earlier paint underneath
+      animation.addLayer(new LottieTextLayer({ name: `${key}_stroke`, args: value.frames, paint: "stroke" }));
+      animation.addLayer(new LottieTextLayer({ name: key, args: value.frames, paint: "fill" }));
+      continue;
+    }
+    const LayerClass = lottieLayerTypeMap[value.type];
+    if (LayerClass) {
+      animation.addLayer(new LayerClass({ name: key, args: value.frames }));
+      continue;
+    }
     const layer = new LottieLayer({});
     animation.addLayer(layer);
-    const shape = new ShapeClass({
-      name: key,
-      args: value.frames,
-    });
-    layer.addShape(shape);
+    layer.addShape(
+      new lottieClassTypeMap[value.type]({
+        name: key,
+        args: value.frames,
+      })
+    );
   }
 
-  console.log(animation.toJson());
-  callback(animation.toJson());
-  this._recording = false;
-  this.loop();
+  const json = animation.toJson();
+  const text = minify ? JSON.stringify(json) : JSON.stringify(json, null, 2);
+  const file =
+    format === "dotlottie"
+      ? await dotLottie(text)
+      : new Blob([text], { type: "application/json" });
+  callback(json, file);
 }
 
 if ((window as any).p5) {
